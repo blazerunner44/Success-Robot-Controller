@@ -68,6 +68,8 @@ public class CustomControls extends OpMode {
 
 	DcMotor motorRight;
 	DcMotor motorLeft;
+	DcMotor clawUpDown;
+	DcMotor clawInOut;
 	Servo claw;
 	Servo arm;
 
@@ -107,7 +109,9 @@ public class CustomControls extends OpMode {
 		motorLeft = hardwareMap.dcMotor.get("motor_1");
 		motorLeft.setDirection(DcMotor.Direction.REVERSE);
 
-
+		//Arm extensions
+		clawUpDown = hardwareMap.dcMotor.get("motor_3");
+		clawInOut = hardwareMap.dcMotor.get("motor_4");
 		
 		arm = hardwareMap.servo.get("servo_1");
 		claw = hardwareMap.servo.get("servo_6");
@@ -154,25 +158,43 @@ public class CustomControls extends OpMode {
 		motorRight.setPower(right);
 		motorLeft.setPower(left);
 
+		/* GAMEPAD 2 CONTROLS
+		--------
+		*/
+
+		//MOTOR CONTROLLERS FOR ARM
+		// throttle: left_stick_y ranges from -1 to 1, where -1 is full up, and
+		// 1 is full down
+		// direction: left_stick_x ranges from -1 to 1, where -1 is full left
+		// and 1 is full right
+		float inOut = -gamepad2.left_stick_y;
+		inOut = Range.clip(inOut, -1, 1);
+		inOut = (float)scaleInput(inOut);
+		clawInOut.setPower(inOut);
+
+		float upDown = -gamepad2.left_stick_x;
+		upDown = Range.clip(upDown, -1, 1);
+		upDown = (float)scaleInput(upDown);
+		clawUpDown.setPower(upDown);
 		// update the position of the arm.
-		if (gamepad1.a) {
+		if (gamepad2.a) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			armPosition += armDelta;
 		}
 
-		if (gamepad1.y) {
+		if (gamepad2.y) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			armPosition -= armDelta;
 		}
 
 		// update the position of the claw
-		if (gamepad1.x) {
+		if (gamepad2.x) {
 			clawPosition += clawDelta;
 		}
 
-		if (gamepad1.b) {
+		if (gamepad2.b) {
 			clawPosition -= clawDelta;
 		}
 
@@ -193,6 +215,7 @@ public class CustomControls extends OpMode {
 		 * are currently write only.
 		 */
         telemetry.addData("Text", "*** Robot Data***");
+		//telemetry.addData("Claw" + String.format("%.2f", inOut));
         telemetry.addData("arm", "arm:  " + String.format("%.2f", armPosition));
         telemetry.addData("claw", "claw:  " + String.format("%.2f", clawPosition));
         telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
