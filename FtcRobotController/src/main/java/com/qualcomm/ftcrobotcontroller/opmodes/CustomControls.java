@@ -143,11 +143,11 @@ public class CustomControls extends OpMode {
 		if (gamepad2.a) {
 //			// if the A button is pushed on gamepad1, increment the position of
 //			// the arm servo.
-			clawPosition += clawDelta;
+			clawPosition -= clawDelta;
 		}
 
 		if (gamepad2.b) {
-			clawPosition -= clawDelta;
+			clawPosition += clawDelta;
 		}
 //
 //        // clip the position values so that they never exceed their allowed range

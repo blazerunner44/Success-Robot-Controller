@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+
+
 public class CustomControlsAuto extends OpMode {
 
 	/*
@@ -40,6 +42,14 @@ public class CustomControlsAuto extends OpMode {
     Servo clawR;
     DcMotorController leftMotorController;
     DcMotorController rightMotorController;
+    public class ClawThread extends Thread{
+        @Override
+        public void run() {
+            super.run();
+            openClaw();
+
+        }
+    }
 
     public CustomControlsAuto() {
 
@@ -83,16 +93,31 @@ public class CustomControlsAuto extends OpMode {
         clawR = hardwareMap.servo.get("servo_6");
 
         // assign the starting position of the wrist and claw
-        clawPosition = 0.2;
+        closeClaw();
     }
 
     @Override
     public void start() {
+        moveForward(10);
+//        try {
+//            Thread.sleep(5000);
+//        } catch(InterruptedException ex) {
+//            //Thread.currentThread().interrupt();
+//            telemetry.addData("Interupted: ", "its broken");
+//        }
+//        Thread clawThread = new ClawThread();
+//        clawThread.run();
+//        try{
+//            clawThread.wait(500);
+//        }catch (InterruptedException e){
+//            telemetry.addData("Int", "urupt");
+//        }
 
-        moveForward(2);
+        //turnRight(true);
+
         //turnRight(false);
 
-        telemetry.addData("We should drive", 2);
+
 
 
 
@@ -102,7 +127,9 @@ public class CustomControlsAuto extends OpMode {
         final int DISTANCE = 12 * feet; //Distance in inches to drive
         final double ROTATIONS = DISTANCE / CIRCUMFERENCE;
         final double COUNTS = ENCODER_CPR * ROTATIONS * GEAR_RATIO;
+        final double motorPower = 0.5;
 
+        telemetry.addData("We should drive", feet);
         telemetry.addData("We are driving rotations: ", COUNTS);
 
         motorLeftFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
@@ -110,19 +137,50 @@ public class CustomControlsAuto extends OpMode {
         motorRightFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
         motorRightBack.setMode(DcMotorController.RunMode.RESET_ENCODERS);
 
-        motorLeftFront.setPower(0.1);
+        motorLeftFront.setPower(motorPower);
         motorLeftFront.setTargetPosition((int) COUNTS);
-        motorLeftFront.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        motorLeftBack.setPower(0.1);
+        motorLeftFront.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
+        motorLeftBack.setPower(motorPower);
         motorLeftBack.setTargetPosition((int) COUNTS);
-        motorLeftBack.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        motorLeftBack.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
 
-        motorRightFront.setPower(0.1);
+        motorRightFront.setPower(motorPower);
         motorRightFront.setTargetPosition((int) COUNTS);
-        motorRightFront.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        motorRightBack.setPower(0.1);
+        motorRightFront.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
+        motorRightBack.setPower(motorPower);
         motorRightBack.setTargetPosition((int) COUNTS);
-        motorRightBack.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        motorRightBack.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
+
+
+
+            telemetry.addData("motor rotations: ", motorLeftBack.getCurrentPosition());
+            if((Math.abs(motorLeftBack.getCurrentPosition() - COUNTS) < 5)){
+                telemetry.addData("count: ", COUNTS);
+                motorLeftFront.setPower(0);
+                motorLeftBack.setPower(0);
+
+                motorRightFront.setPower(0);
+                motorRightBack.setPower(0);
+
+                motorLeftFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+                motorLeftBack.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+                motorRightFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+                motorRightBack.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+
+            }
+
+    }
+
+    public void closeClaw(){
+        clawPosition = 0.0;
+        clawL.setPosition(1 - clawPosition);
+        clawR.setPosition(clawPosition);
+    }
+
+    public void openClaw(){
+        clawPosition = 1.0;
+        clawL.setPosition(1-clawPosition);
+        clawR.setPosition(clawPosition);
     }
 
     public void turnRight(boolean right){
@@ -130,16 +188,41 @@ public class CustomControlsAuto extends OpMode {
         final double ROTATIONS = DISTANCE / CIRCUMFERENCE;
         final double COUNTS = ENCODER_CPR * ROTATIONS * GEAR_RATIO;
 
+        telemetry.addData("Turning Right: ", right);
+
+        motorLeftFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        motorLeftBack.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        motorRightFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        motorRightBack.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+
         if(right){
+            motorRightFront.setPower(0.7);
             motorRightFront.setTargetPosition((int) COUNTS);
-            motorRightFront.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+            motorRightFront.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+            motorRightBack.setPower(0.7);
             motorRightBack.setTargetPosition((int) COUNTS);
-            motorRightBack.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+            motorRightBack.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
         }else{
+            motorLeftFront.setPower(0.7);
             motorLeftFront.setTargetPosition((int) COUNTS);
-            motorLeftFront.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+            motorLeftFront.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+            motorLeftBack.setPower(0.7);
             motorLeftBack.setTargetPosition((int) COUNTS);
-            motorLeftBack.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+            motorLeftBack.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        }
+
+        if((Math.abs(motorLeftBack.getCurrentPosition() - COUNTS) < 5) || Math.abs(motorRightBack.getCurrentPosition() - COUNTS) < 5){
+            telemetry.addData("turn count: ", COUNTS);
+            motorLeftFront.setPower(0);
+            motorLeftBack.setPower(0);
+
+            motorRightFront.setPower(0);
+            motorRightBack.setPower(0);
+
+            motorLeftFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+            motorLeftBack.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+            motorRightFront.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+            motorRightBack.setMode(DcMotorController.RunMode.RESET_ENCODERS);
         }
     }
 
@@ -166,7 +249,7 @@ public class CustomControlsAuto extends OpMode {
 //
 //        }
 
-        stop();
+        //stop();
 
     }
 
@@ -177,6 +260,8 @@ public class CustomControlsAuto extends OpMode {
      */
     @Override
     public void stop() {
+
+        moveForward(0);
 
     }
 
